@@ -1842,3 +1842,226 @@ def setup_database():
             "status": "error",
             "message": f"Database setup failed: {str(e)}"
         }), 500 
+
+@bp.route('/browse-database')
+def browse_database():
+    """Browse all database content in a nice format"""
+    try:
+        from app.models import User, School, Program, Survey, SurveyResponse, Favorite, Recommendation
+        
+        # Get all data
+        users = User.query.all()
+        schools = School.query.all()
+        programs = Program.query.all()
+        surveys = Survey.query.all()
+        survey_responses = SurveyResponse.query.all()
+        favorites = Favorite.query.all()
+        recommendations = Recommendation.query.all()
+        
+        # Format data for display
+        data = {
+            "summary": {
+                "users": len(users),
+                "schools": len(schools),
+                "programs": len(programs),
+                "surveys": len(surveys),
+                "survey_responses": len(survey_responses),
+                "favorites": len(favorites),
+                "recommendations": len(recommendations)
+            },
+            "users": [
+                {
+                    "id": u.id,
+                    "username": u.username,
+                    "email": u.email,
+                    "is_admin": u.is_admin,
+                    "created_at": u.created_at.strftime('%Y-%m-%d %H:%M') if u.created_at else None
+                } for u in users
+            ],
+            "schools": [
+                {
+                    "id": s.id,
+                    "name": s.name,
+                    "location": s.location,
+                    "website": s.website,
+                    "programs_count": len(s.programs.all()) if hasattr(s, 'programs') else 0
+                } for s in schools
+            ],
+            "programs": [
+                {
+                    "id": p.id,
+                    "name": p.name,
+                    "school": p.school.name if p.school else "Unknown",
+                    "degree_type": p.degree_type,
+                    "duration": p.duration
+                } for p in programs
+            ],
+            "surveys": [
+                {
+                    "id": s.id,
+                    "title": s.title,
+                    "is_active": s.is_active,
+                    "responses_count": len(s.responses.all()) if hasattr(s, 'responses') else 0
+                } for s in surveys
+            ]
+        }
+        
+        return jsonify(data)
+        
+    except Exception as e:
+        return jsonify({
+            "error": f"Database browse failed: {str(e)}"
+        }), 500
+
+@bp.route('/database-viewer')
+def database_viewer():
+    """HTML page to view database content"""
+    return '''
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>GradeUp Database Viewer</title>
+        <style>
+            body { font-family: Arial, sans-serif; margin: 20px; background: #f5f5f5; }
+            .container { max-width: 1200px; margin: 0 auto; }
+            .card { background: white; margin: 20px 0; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+            .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; text-align: center; padding: 30px; border-radius: 8px; }
+            .summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; }
+            .stat { background: #f8f9fa; padding: 15px; border-radius: 6px; text-align: center; }
+            .stat-number { font-size: 24px; font-weight: bold; color: #667eea; }
+            .stat-label { font-size: 14px; color: #666; margin-top: 5px; }
+            .section { margin: 30px 0; }
+            .section h3 { color: #333; border-bottom: 2px solid #667eea; padding-bottom: 10px; }
+            .table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+            .table th, .table td { padding: 12px; text-align: left; border-bottom: 1px solid #ddd; }
+            .table th { background: #f8f9fa; font-weight: 600; }
+            .table tr:hover { background: #f8f9fa; }
+            .refresh-btn { background: #667eea; color: white; padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; margin: 10px 0; }
+            .refresh-btn:hover { background: #5a67d8; }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <div class="header">
+                <h1>🎓 GradeUp Database Viewer</h1>
+                <p>Real-time view of your PostgreSQL database</p>
+                <button class="refresh-btn" onclick="loadData()">🔄 Refresh Data</button>
+            </div>
+            
+            <div class="card">
+                <div id="summary" class="summary">
+                    <div class="stat">
+                        <div class="stat-number">-</div>
+                        <div class="stat-label">Loading...</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="section">
+                    <h3>📊 Detailed Data</h3>
+                    <div id="detailed-data">Loading database content...</div>
+                </div>
+            </div>
+        </div>
+
+        <script>
+            async function loadData() {
+                try {
+                    const response = await fetch('/browse-database');
+                    const data = await response.json();
+                    
+                    // Update summary
+                    const summaryHtml = `
+                        <div class="stat"><div class="stat-number">${data.summary.users}</div><div class="stat-label">Users</div></div>
+                        <div class="stat"><div class="stat-number">${data.summary.schools}</div><div class="stat-label">Schools</div></div>
+                        <div class="stat"><div class="stat-number">${data.summary.programs}</div><div class="stat-label">Programs</div></div>
+                        <div class="stat"><div class="stat-number">${data.summary.surveys}</div><div class="stat-label">Surveys</div></div>
+                        <div class="stat"><div class="stat-number">${data.summary.survey_responses}</div><div class="stat-label">Responses</div></div>
+                        <div class="stat"><div class="stat-number">${data.summary.favorites}</div><div class="stat-label">Favorites</div></div>
+                        <div class="stat"><div class="stat-number">${data.summary.recommendations}</div><div class="stat-label">Recommendations</div></div>
+                    `;
+                    document.getElementById('summary').innerHTML = summaryHtml;
+                    
+                    // Update detailed data
+                    let detailedHtml = '';
+                    
+                    // Schools table
+                    if (data.schools.length > 0) {
+                        detailedHtml += '<h4>🏫 Schools</h4>';
+                        detailedHtml += '<table class="table"><tr><th>ID</th><th>Name</th><th>Location</th><th>Website</th><th>Programs</th></tr>';
+                        data.schools.forEach(school => {
+                            detailedHtml += `<tr>
+                                <td>${school.id}</td>
+                                <td>${school.name}</td>
+                                <td>${school.location}</td>
+                                <td><a href="${school.website}" target="_blank">${school.website}</a></td>
+                                <td>${school.programs_count}</td>
+                            </tr>`;
+                        });
+                        detailedHtml += '</table>';
+                    }
+                    
+                    // Programs table
+                    if (data.programs.length > 0) {
+                        detailedHtml += '<h4>📚 Programs</h4>';
+                        detailedHtml += '<table class="table"><tr><th>ID</th><th>Program</th><th>School</th><th>Degree</th><th>Duration</th></tr>';
+                        data.programs.forEach(program => {
+                            detailedHtml += `<tr>
+                                <td>${program.id}</td>
+                                <td>${program.name}</td>
+                                <td>${program.school}</td>
+                                <td>${program.degree_type}</td>
+                                <td>${program.duration}</td>
+                            </tr>`;
+                        });
+                        detailedHtml += '</table>';
+                    }
+                    
+                    // Users table
+                    if (data.users.length > 0) {
+                        detailedHtml += '<h4>👥 Users</h4>';
+                        detailedHtml += '<table class="table"><tr><th>ID</th><th>Username</th><th>Email</th><th>Admin</th><th>Created</th></tr>';
+                        data.users.forEach(user => {
+                            detailedHtml += `<tr>
+                                <td>${user.id}</td>
+                                <td>${user.username}</td>
+                                <td>${user.email}</td>
+                                <td>${user.is_admin ? '✅' : '❌'}</td>
+                                <td>${user.created_at || 'N/A'}</td>
+                            </tr>`;
+                        });
+                        detailedHtml += '</table>';
+                    }
+                    
+                    // Surveys table
+                    if (data.surveys.length > 0) {
+                        detailedHtml += '<h4>📋 Surveys</h4>';
+                        detailedHtml += '<table class="table"><tr><th>ID</th><th>Title</th><th>Active</th><th>Responses</th></tr>';
+                        data.surveys.forEach(survey => {
+                            detailedHtml += `<tr>
+                                <td>${survey.id}</td>
+                                <td>${survey.title}</td>
+                                <td>${survey.is_active ? '✅' : '❌'}</td>
+                                <td>${survey.responses_count}</td>
+                            </tr>`;
+                        });
+                        detailedHtml += '</table>';
+                    }
+                    
+                    document.getElementById('detailed-data').innerHTML = detailedHtml;
+                    
+                } catch (error) {
+                    document.getElementById('detailed-data').innerHTML = `<p style="color: red;">Error loading data: ${error.message}</p>`;
+                }
+            }
+            
+            // Load data on page load
+            loadData();
+            
+            // Auto-refresh every 30 seconds
+            setInterval(loadData, 30000);
+        </script>
+    </body>
+    </html>
+    ''' 
