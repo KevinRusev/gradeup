@@ -1,77 +1,12 @@
 import os
-import pyodbc
 import sys
 import json
 from datetime import datetime
 from sqlalchemy import create_engine, text, inspect
-from sqlalchemy.engine.url import make_url
 from app import create_app, db
 from app.models import User, School, Program, Survey, SurveyResponse, Recommendation, Favorite
 from config import Config
 from werkzeug.security import generate_password_hash
-import platform
-
-DB_NAME = 'SchoolRecommendation'
-SERVER = 'localhost'
-DRIVER = 'ODBC Driver 17 for SQL Server'
-
-def drop_database():
-    """Drop the database if it exists"""
-    try:
-        if platform.system() == 'Windows':
-            conn_str = f'DRIVER={{{DRIVER}}};SERVER={SERVER};Trusted_Connection=yes;DATABASE=master'
-        else:
-            conn_str = f'DRIVER={{{DRIVER}}};SERVER={SERVER};UID=sa;PWD=yo(!)urStrongPassword12;DATABASE=master'
-        drop_db_sql = f"""
-        IF EXISTS (SELECT name FROM sys.databases WHERE name = N'{DB_NAME}')
-        BEGIN
-            ALTER DATABASE [{DB_NAME}] SET SINGLE_USER WITH ROLLBACK IMMEDIATE;
-            DROP DATABASE [{DB_NAME}];
-        END
-        """
-        
-        print(f"Connecting to SQL Server on {SERVER}...")
-        with pyodbc.connect(conn_str, autocommit=True) as conn:
-            with conn.cursor() as cursor:
-                print(f"Dropping database '{DB_NAME}' if it exists...")
-                cursor.execute(drop_db_sql)
-                print(f"Database '{DB_NAME}' dropped successfully (if it existed).")
-        return True
-    except Exception as e:
-        print(f"Error dropping database: {str(e)}")
-        return False
-
-def create_database():
-    """Create the database if it doesn't exist"""
-    try:
-        if platform.system() == 'Windows':
-            conn_str = f'DRIVER={{{DRIVER}}};SERVER={SERVER};Trusted_Connection=yes;DATABASE=master'
-        else:
-            conn_str = f'DRIVER={{{DRIVER}}};SERVER={SERVER};UID=sa;PWD=yo(!)urStrongPassword12;DATABASE=master'
-        create_db_sql = f"CREATE DATABASE [{DB_NAME}]"
-        
-        print(f"Creating database '{DB_NAME}'...")
-        with pyodbc.connect(conn_str, autocommit=True) as conn:
-            with conn.cursor() as cursor:
-                cursor.execute(create_db_sql)
-                print(f"Database '{DB_NAME}' created successfully.")
-        return True
-    except Exception as e:
-        print(f"Error creating database: {str(e)}")
-        return False
-
-def create_tables():
-    """Create all tables using SQLAlchemy models"""
-    try:
-        print("Creating tables using SQLAlchemy models...")
-        app = create_app(Config)
-        with app.app_context():
-            db.create_all()
-        print("All tables created successfully.")
-        return True
-    except Exception as e:
-        print(f"Error creating tables: {str(e)}")
-        return False
 
 def create_admin_user():
     """Create an admin user"""
@@ -553,50 +488,65 @@ def create_sample_survey():
         print(f"Error creating sample survey: {str(e)}")
         return False
 
+def check_database_connection():
+    """Check if database connection works"""
+    try:
+        app = create_app(Config)
+        with app.app_context():
+            # Test connection
+            result = db.session.execute(text('SELECT 1'))
+            test_value = result.scalar()
+            if test_value == 1:
+                print("✅ Database connection successful")
+                return True
+            else:
+                print("❌ Database connection failed")
+                return False
+    except Exception as e:
+        print(f"❌ Database connection error: {e}")
+        return False
+
 def main():
     """Main execution function"""
-    print("=" * 50)
-    print("School Recommendation System - Database Setup")
-    print("=" * 50)
+    print("=" * 70)
+    print("🎓 GradeUp - University Recommendation System")
+    print("📊 PostgreSQL Database Setup & Sample Data Population")
+    print("=" * 70)
     
-    
-    if not drop_database():
-        print("Database drop failed. Exiting...")
+    # Check database connection
+    if not check_database_connection():
+        print("❌ Database connection failed. Make sure PostgreSQL is connected.")
         sys.exit(1)
     
-    
-    if not create_database():
-        print("Database creation failed. Exiting...")
-        sys.exit(1)
-    
-    
-    if not create_tables():
-        print("Table creation failed. Exiting...")
-        sys.exit(1)
-    
-    
+    # Create admin user
     if not create_admin_user():
-        print("Admin user creation failed. Exiting...")
+        print("❌ Admin user creation failed.")
         sys.exit(1)
     
-    
+    # Create sample schools and programs
     if not create_sample_schools():
-        print("Sample schools creation failed. Exiting...")
+        print("❌ Sample schools creation failed.")
         sys.exit(1)
     
-    
+    # Create sample survey
     if not create_sample_survey():
-        print("Sample survey creation failed. Exiting...")
+        print("❌ Sample survey creation failed.")
         sys.exit(1)
     
-    print("=" * 50)
-    print("Database setup completed successfully!")
-    print("You can now start the application.")
-    print("=" * 50)
-    print("Admin credentials:")
-    print("Username: admin")
-    print("Password: admin123")
-    print("=" * 50)
+    print("=" * 70)
+    print("🎉 Database setup completed successfully!")
+    print("📈 Your GradeUp system is now ready with sample data!")
+    print("=" * 70)
+    print("🔐 Admin credentials:")
+    print("   Username: admin")
+    print("   Password: admin123")
+    print("=" * 70)
+    print("📊 Sample data created:")
+    print("   • 10 Bulgarian universities")
+    print("   • 30+ academic programs")
+    print("   • Educational preferences survey")
+    print("   • 1 admin user")
+    print("=" * 70)
 
 if __name__ == "__main__":
     main() 

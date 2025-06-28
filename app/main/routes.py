@@ -43,21 +43,25 @@ except ImportError:
     
     np = MockNumpy()
 
-# ML imports temporarily disabled for deployment
-# from app.ml.recommendation_engine import recommendation_engine
-# from app.ml.prediction_system import AdvancedPredictionSystem
-# from app.ml.demo_prediction_service import demo_prediction_service
-# from app.ml.service import MLModelService
-# from app.ml.training.training_pipeline import TrainingPipeline
-# from app.ml.training.linear_models import LinearRegression, LogisticRegression
-# from app.ml.training.base import TrainingConfig
-
-# Create mock objects for ML functionality
-class MockRecommendationEngine:
-    def get_personalized_suggestions(self, user_id, limit=3):
-        return {'completion_suggestions': []}
-
-recommendation_engine = MockRecommendationEngine()
+# ML imports - with fallback for deployment compatibility
+try:
+    from app.ml.recommendation_engine import recommendation_engine
+    from app.ml.prediction_system import AdvancedPredictionSystem
+    from app.ml.demo_prediction_service import demo_prediction_service
+    from app.ml.service import MLModelService
+    from app.ml.training.training_pipeline import TrainingPipeline
+    from app.ml.training.linear_models import LinearRegression, LogisticRegression
+    from app.ml.training.base import TrainingConfig
+    ML_FEATURES_ENABLED = True
+except ImportError as e:
+    # Create mock objects for ML functionality when packages not available
+    class MockRecommendationEngine:
+        def get_personalized_suggestions(self, user_id, limit=3):
+            return {'completion_suggestions': []}
+    
+    recommendation_engine = MockRecommendationEngine()
+    ML_FEATURES_ENABLED = False
+    print(f"⚠️ ML features disabled: {e}")
 import json
 
 logger = logging.getLogger(__name__)

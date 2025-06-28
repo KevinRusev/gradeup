@@ -65,17 +65,25 @@ def create_app(config_class=Config):
     app.register_blueprint(data_collection_bp, url_prefix='/data')
 
     
-    # ML imports temporarily disabled for deployment
-    # from app.ml.blueprint import ml_bp
-    # app.register_blueprint(ml_bp)
-    
-    # Register Advanced Prediction System blueprint - temporarily disabled
-    # from app.ml.prediction_blueprint import prediction_bp
-    # app.register_blueprint(prediction_bp)
-    
-    # Register Recommendation Engine blueprint - temporarily disabled
-    # from app.ml.recommendation_blueprint import recommendation_bp
-    # app.register_blueprint(recommendation_bp)
+    # Register ML blueprints
+    try:
+        from app.ml.blueprint import ml_bp
+        app.register_blueprint(ml_bp)
+        
+        # Register Advanced Prediction System blueprint
+        from app.ml.prediction_blueprint import prediction_bp
+        app.register_blueprint(prediction_bp)
+        
+        # Register Recommendation Engine blueprint
+        from app.ml.recommendation_blueprint import recommendation_bp
+        app.register_blueprint(recommendation_bp)
+        
+        app.logger.info("✅ ML blueprints registered successfully")
+    except ImportError as e:
+        app.logger.warning(f"⚠️ ML features disabled due to missing dependencies: {e}")
+    except Exception as e:
+        app.logger.warning(f"⚠️ ML features initialization warning: {e}")
+        # Application will continue to work without ML features
 
     # Register error handlers
     @app.errorhandler(404)
@@ -86,22 +94,23 @@ def create_app(config_class=Config):
     def internal_server_error(e):
         return render_template('500.html'), 500
 
-    # Initialize prediction system with proper app context - temporarily disabled
-    # with app.app_context():
-    #     try:
-    #         from app.ml.prediction_blueprint import init_prediction_system
-    #         init_prediction_system(app)
-    #     except Exception as e:
-    #         app.logger.warning(f"ML service initialization warning: {e}")
-    #         # Application will continue to work in demo mode
-    #         
-    #     # Initialize recommendation engine
-    #     try:
-    #         from app.ml.recommendation_engine import recommendation_engine
-    #         recommendation_engine.initialize()
-    #         app.logger.info("Recommendation engine initialized successfully")
-    #     except Exception as e:
-    #         app.logger.warning(f"Recommendation engine initialization warning: {e}")
+    # Initialize ML services with proper app context
+    with app.app_context():
+        try:
+            from app.ml.prediction_blueprint import init_prediction_system
+            init_prediction_system(app)
+            app.logger.info("✅ Prediction system initialized successfully")
+        except Exception as e:
+            app.logger.warning(f"⚠️ ML service initialization warning: {e}")
+            # Application will continue to work in demo mode
+            
+        # Initialize recommendation engine
+        try:
+            from app.ml.recommendation_engine import recommendation_engine
+            recommendation_engine.initialize()
+            app.logger.info("✅ Recommendation engine initialized successfully")
+        except Exception as e:
+            app.logger.warning(f"⚠️ Recommendation engine initialization warning: {e}")
             
     # Register error handlers
     @app.errorhandler(404)
