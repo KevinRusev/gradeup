@@ -46,6 +46,22 @@ def create_app(config_class=Config):
             db.create_all()
             app.logger.info("✅ Database tables initialized")
             
+            # Auto-populate database if empty
+            from app.models import School, User, Survey
+            if School.query.count() == 0:
+                app.logger.info("🔄 Database is empty, running auto-setup...")
+                try:
+                    # Import and run setup functions
+                    import setup
+                    setup.create_admin_user()
+                    setup.create_sample_schools()
+                    setup.create_sample_survey()
+                    app.logger.info("✅ Database auto-setup completed successfully!")
+                except Exception as setup_error:
+                    app.logger.warning(f"⚠️ Auto-setup failed: {setup_error}")
+            else:
+                app.logger.info("✅ Database already populated")
+            
         except Exception as e:
             app.logger.error(f"❌ Database initialization failed: {e}")
             # Continue without database (will use fallback SQLite)
