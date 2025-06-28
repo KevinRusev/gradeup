@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: gradeup
+    env: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: python app.py
+    envVars:
+      - key: DISABLE_EMAIL_VERIFICATION
+        value: true
+      - key: SECRET_KEY
+        generateValue: true
+      - key: PYTHON_VERSION
+        value: 3.11.0 

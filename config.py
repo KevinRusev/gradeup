@@ -8,29 +8,21 @@ load_dotenv(os.path.join(basedir, '.env'))
 class Config:
     SECRET_KEY = os.environ.get('SECRET_KEY', 'hard-to-guess-string')
 
-    DB_USER = os.environ.get('DB_USER')
-    DB_PASSWORD = os.environ.get('DB_PASSWORD')
-    DB_HOST = os.environ.get('DB_HOST')
-    DB_NAME = os.environ.get('DB_NAME')
-    
     # Email verification toggle
     DISABLE_EMAIL_VERIFICATION = os.environ.get('DISABLE_EMAIL_VERIFICATION', 'false').lower() in ['true', 'on', '1', 'yes']
     
-    # Platform-specific database driver and connection string
-    if platform.system() == 'Darwin':  # macOS
-        DB_DRIVER = os.environ.get('DB_DRIVER', 'ODBC Driver 17 for SQL Server')
-        SQLALCHEMY_DATABASE_URI = (
-            f"mssql+pyodbc://{DB_USER}:{DB_PASSWORD}@{DB_HOST}/{DB_NAME}"
-            f"?driver={DB_DRIVER.replace(' ', '+')}"
-            f"&TrustServerCertificate=yes"
-            f"&Encrypt=no"
-        )
-    else:  # Windows/Linux
-        DB_DRIVER = os.environ.get('DB_DRIVER', 'ODBC Driver 17 for SQL Server')
-        SQLALCHEMY_DATABASE_URI = (
-    "mssql+pyodbc://admin123:Adminparolchik123@grade-up-srv.database.windows.net:1433/grade-up-db"
-    "?driver=ODBC+Driver+17+for+SQL+Server&Encrypt=yes&TrustServerCertificate=no"
-)
+    # Database configuration - supports both PostgreSQL (for production) and SQLite (for development)
+    DATABASE_URL = os.environ.get('DATABASE_URL')
+    
+    if DATABASE_URL:
+        # Production: Use PostgreSQL from Render
+        SQLALCHEMY_DATABASE_URI = DATABASE_URL
+        # Fix for SQLAlchemy 1.4+ compatibility with Render's postgres:// URLs
+        if SQLALCHEMY_DATABASE_URI.startswith("postgres://"):
+            SQLALCHEMY_DATABASE_URI = SQLALCHEMY_DATABASE_URI.replace("postgres://", "postgresql://", 1)
+    else:
+        # Development: Use SQLite
+        SQLALCHEMY_DATABASE_URI = 'sqlite:///' + os.path.join(basedir, 'app.db')
 
     SQLALCHEMY_TRACK_MODIFICATIONS = False
 
