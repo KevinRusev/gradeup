@@ -1,0 +1,1837 @@
+<!--
+    Recommendations Page Template
+    
+    This template displays personalized university and program recommendations
+    based on user survey responses and preferences.
+    
+    UPDATES:
+    - Fixed university match percentage display
+    - Improved visualization of match scores
+    - Enhanced match reasons display
+-->
+
+{% extends "base.html" %}
+
+{% block title %}My Recommendations - GradeUP{% endblock %}
+
+{% block content %}
+<div class="cosmic-page-container">
+    <!-- Hero Section -->
+    <div class="cosmic-hero-enhanced">
+        <div class="cosmic-particles-hero"></div>
+        <div class="container-fluid">
+            <div class="hero-content text-center">
+                <div class="hero-icon-enhanced mb-4">
+                    <div class="professional-emoji size-xxl cosmic-glow">
+                        <i class="fas fa-star"></i>
+                    </div>
+                    <div class="cosmic-glow-enhanced"></div>
+                </div>
+                <h1 class="cosmic-title-enhanced mb-3">
+                    <span class="title-gradient">My Recommendations</span>
+                </h1>
+                <p class="cosmic-subtitle-enhanced mb-4">
+                    Personalized university and program recommendations based on your survey responses
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Content Section -->
+    <div class="cosmic-content-section">
+        <div class="container-fluid">
+            <div class="row justify-content-center">
+                <div class="col-lg-10">
+                    {% if user_responses and user_responses|length > 0 %}
+                        <!-- User has taken surveys -->
+                        <div class="recommendations-container">
+                            <!-- Survey Status Card -->
+                            <div class="cosmic-card mb-4" data-aos="fade-up">
+                                <div class="card-header">
+                                    <h3>
+                                        <i class="fas fa-check-circle text-success me-2"></i>
+                                        Survey Completed ({{ user_responses|length }} response{{ 's' if user_responses|length != 1 else '' }})
+                                    </h3>
+                                </div>
+                                <div class="card-content">
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="status-item">
+                                                <i class="fas fa-calendar-check"></i>
+                                                <div class="status-details">
+                                                    <h5>Latest Survey Date</h5>
+                                                    <p>{{ user_responses[0].created_at.strftime('%B %d, %Y at %I:%M %p') if user_responses else 'N/A' }}</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="status-item">
+                                                <i class="fas fa-chart-line"></i>
+                                                <div class="status-details">
+                                                    <h5>Analysis Status</h5>
+                                                    <p class="text-success">
+                                                        <i class="fas fa-check me-1"></i>
+                                                        Complete ({{ user_responses|length }}/{{ max_submissions }} submissions)
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- AI Analysis Results -->
+                            <div class="cosmic-card mb-4" data-aos="fade-up" data-aos-delay="100">
+                                <div class="card-header">
+                                    <h3>
+                                        <i class="fas fa-brain me-2"></i>
+                                        AI Analysis Results
+                                    </h3>
+                                </div>
+                                <div class="card-content">
+                                    <div class="analysis-results">
+                                        <div class="row">
+                                            <div class="col-md-4 mb-3">
+                                                <div class="analysis-metric">
+                                                    <div class="metric-icon">
+                                                        <i class="fas fa-graduation-cap"></i>
+                                                    </div>
+                                                    <div class="metric-content">
+                                                        <h4>Match Score</h4>
+                                                        <div class="score-display">
+                                                            {% if program_recommendations and program_recommendations|length > 0 %}
+                                                                <span class="score-number">{{ (program_recommendations[0].match_score * 100)|round|int }}%</span>
+                                                                <div class="score-bar">
+                                                                    <div class="score-fill" style="width: {{ (program_recommendations[0].match_score * 100)|round|int }}%;"></div>
+                                                                </div>
+                                                            {% else %}
+                                                                <span class="score-number">N/A</span>
+                                                                <div class="score-bar">
+                                                                    <div class="score-fill" style="width: 0%;"></div>
+                                                                </div>
+                                                            {% endif %}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-4 mb-3">
+                                                <div class="analysis-metric">
+                                                    <div class="metric-icon">
+                                                        <i class="fas fa-university"></i>
+                                                    </div>
+                                                    <div class="metric-content">
+                                                        <h4>Programs Found</h4>
+                                                        <div class="metric-value">
+                                                            <span class="number">{{ program_recommendations|length }}</span>
+                                                            <span class="label">Matching Programs</span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="col-md-4 mb-3">
+                                                <div class="analysis-metric">
+                                                    <div class="metric-icon">
+                                                        <i class="fas fa-target"></i>
+                                                    </div>
+                                                    <div class="metric-content">
+                                                        <h4>Best Match</h4>
+                                                        <div class="metric-value">
+                                                            {% if program_recommendations and program_recommendations|length > 0 %}
+                                                                <span class="best-match">{{ program_recommendations[0].program_name }}</span>
+                                                                <span class="confidence">{{ (program_recommendations[0].match_score * 100)|round|int }}% confidence</span>
+                                                            {% else %}
+                                                                <span class="best-match">No matches yet</span>
+                                                                <span class="confidence">Take survey first</span>
+                                                            {% endif %}
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Recommended Programs -->
+                            <div class="cosmic-card mb-4" data-aos="fade-up" data-aos-delay="200">
+                                <div class="card-header">
+                                    <h3>
+                                        <i class="fas fa-award me-2"></i>
+                                        Top Recommended Programs
+                                        <span class="method-badge statistical-badge">
+                                            <i class="fas fa-chart-bar"></i>
+                                            Statistical Method
+                                        </span>
+                                    </h3>
+                                    <p>Based on advanced statistical analysis of your interests, skills, and career goals</p>
+                                </div>
+                                <div class="card-content">
+                                    <div class="recommendations-grid">
+                                        {% if program_recommendations and program_recommendations|length > 0 %}
+                                            {% for recommendation in program_recommendations %}
+                                            <div class="recommendation-item">
+                                                <div class="rec-header">
+                                                    <div class="rec-rank">{{ loop.index }}</div>
+                                                    <div class="rec-info">
+                                                        <h4>{{ recommendation.program_name }}</h4>
+                                                        <p>{{ recommendation.school_name }}</p>
+                                                    </div>
+                                                    <div class="rec-score">
+                                                        <span class="score">{{ (recommendation.match_score * 100)|int }}%</span>
+                                                        <small>match</small>
+                                                    </div>
+                                                </div>
+                                                <div class="rec-details">
+                                                    <div class="rec-tags">
+                                                        {% if recommendation.program_duration %}
+                                                            <span class="tag">{{ recommendation.program_duration }}</span>
+                                                        {% endif %}
+                                                        {% if recommendation.language %}
+                                                            <span class="tag">{{ recommendation.language }}</span>
+                                                        {% endif %}
+                                                        <span class="tag">{{ (recommendation.match_score * 100)|int }}% match</span>
+                                                    </div>
+                                                    <p class="rec-description">
+                                                        {% if recommendation.recommendation_reasons %}
+                                                            {{ recommendation.recommendation_reasons|join('. ') }}.
+                                                        {% else %}
+                                                            Recommended based on your survey responses and interests.
+                                                        {% endif %}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            {% endfor %}
+                                        {% else %}
+                                            <div class="no-recommendations">
+                                                <div class="empty-state">
+                                                    <i class="fas fa-search fa-3x mb-3 text-muted"></i>
+                                                    <h4>No Program Recommendations Found</h4>
+                                                    <p>We couldn't find specific program recommendations based on your current survey data. This might be because:</p>
+                                                    <ul class="text-left">
+                                                        <li>Your survey responses need more specific preferences</li>
+                                                        <li>The database needs more program data</li>
+                                                        <li>You may want to retake the survey with different answers</li>
+                                                    </ul>
+                                                    <a href="{{ url_for('main.survey') }}" class="btn btn-primary mt-3">
+                                                        <i class="fas fa-redo"></i> Retake Survey
+                                                    </a>
+                                                </div>
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Recommended Universities -->
+                            <div class="cosmic-card mb-4" data-aos="fade-up" data-aos-delay="250">
+                                <div class="card-header">
+                                    <h3>
+                                        <i class="fas fa-university me-2"></i>
+                                        Top Recommended Universities
+                                    </h3>
+                                    <p>Universities that match your preferences and academic interests</p>
+                                    {% if university_recommendations and university_recommendations|length > 0 %}
+                                        <div class="recommendations-summary">
+                                            <span class="summary-badge">
+                                                <i class="fas fa-graduation-cap"></i>
+                                                {{ university_recommendations|length }} Perfect Matches Found
+                                            </span>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                <div class="card-content">
+                                    <div class="universities-grid">
+                                        {% if university_recommendations and university_recommendations|length > 0 %}
+                                            {% for university in university_recommendations %}
+                                            <div class="university-item" data-aos="fade-up" data-aos-delay="{{ 300 + (loop.index0 * 100) }}">
+                                                <div class="uni-header">
+                                                    <div class="uni-rank">
+                                                        {{ loop.index }}
+                                                        <div class="rank-glow"></div>
+                                                    </div>
+                                                    <div class="uni-info">
+                                                        <h4>{{ university.school_name }}</h4>
+                                                        <p>
+                                                            <i class="fas fa-map-marker-alt"></i>
+                                                            {{ university.location or 'Location not specified' }}
+                                                        </p>
+                                                    </div>
+                                                    <div class="uni-score">
+                                                        <div class="score-container">
+                                                            <span class="score">{{ university.match_percentage }}%</span>
+                                                            <div class="score-ring">
+                                                                <svg width="60" height="60">
+                                                                    <circle cx="30" cy="30" r="25" stroke="rgba(139, 92, 246, 0.2)" stroke-width="3" fill="none"/>
+                                                                    <circle cx="30" cy="30" r="25" stroke="var(--cosmic-blue)" stroke-width="3" fill="none" 
+                                                                            stroke-dasharray="{{ (university.match_percentage * 1.57)|round }}, 157" 
+                                                                            stroke-linecap="round" transform="rotate(-90 30 30)"/>
+                                                                </svg>
+                                                            </div>
+                                                        </div>
+                                                        <small>match</small>
+                                                    </div>
+                                                </div>
+                                                <div class="uni-details">
+                                                    {% if university.match_reasons %}
+                                                        <div class="uni-tags">
+                                                            {% for reason in university.match_reasons[:3] %}
+                                                                <span class="tag">
+                                                                    <i class="fas fa-check-circle"></i>
+                                                                    {{ reason|truncate(30) }}
+                                                                </span>
+                                                            {% endfor %}
+                                                        </div>
+                                                    {% endif %}
+                                                    
+                                                    {% if university.description %}
+                                                        <div class="uni-description-container">
+                                                            <p class="uni-description">{{ university.description|truncate(140) }}</p>
+                                                        </div>
+                                                    {% endif %}
+                                                    
+                                                    <div class="uni-actions">
+                                                        {% if university.website %}
+                                                            <a href="{{ university.website }}" target="_blank" class="uni-link primary">
+                                                                <i class="fas fa-external-link-alt"></i>
+                                                                <span>Visit Website</span>
+                                                            </a>
+                                                        {% endif %}
+                                                        <button class="uni-link secondary" onclick="addToFavorites({{ university.school_id or 0 }})">
+                                                            <i class="fas fa-heart"></i>
+                                                            <span>Add to Favorites</span>
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                                
+                                                <!-- Decorative elements -->
+                                                <div class="uni-particles">
+                                                    <div class="particle particle-1"></div>
+                                                    <div class="particle particle-2"></div>
+                                                    <div class="particle particle-3"></div>
+                                                </div>
+                                            </div>
+                                            {% endfor %}
+                                        {% else %}
+                                            <div class="no-universities">
+                                                <div class="empty-state">
+                                                    <div class="empty-icon">
+                                                        <i class="fas fa-university"></i>
+                                                        <div class="icon-sparkles">
+                                                            <i class="fas fa-sparkles"></i>
+                                                        </div>
+                                                    </div>
+                                                    <h4>No University Recommendations Found</h4>
+                                                    <p>We couldn't find university recommendations based on your current survey data.</p>
+                                                    <div class="suggestions-list">
+                                                        <div class="suggestion-item">
+                                                            <i class="fas fa-user-edit"></i>
+                                                            <span>Complete your profile with location preferences</span>
+                                                        </div>
+                                                        <div class="suggestion-item">
+                                                            <i class="fas fa-redo-alt"></i>
+                                                            <span>Retake the survey with more specific answers</span>
+                                                        </div>
+                                                        <div class="suggestion-item">
+                                                            <i class="fas fa-database"></i>
+                                                            <span>Check back as we add more universities</span>
+                                                        </div>
+                                                    </div>
+                                                    <a href="{{ url_for('main.survey') }}" class="empty-state-btn">
+                                                        <i class="fas fa-rocket"></i>
+                                                        <span>Retake Survey</span>
+                                                    </a>
+                                                </div>
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Dual AI Analysis Section -->
+                            {% if main_predictions or backup_predictions %}
+                            <div class="cosmic-card mb-4" data-aos="fade-up" data-aos-delay="350">
+                                <div class="card-header">
+                                    <h3>
+                                        <i class="fas fa-brain me-2"></i>
+                                        Dual AI Analysis
+                                    </h3>
+                                    <p>Advanced Neural Network + Statistical Backup Method</p>
+                                </div>
+                                <div class="card-content">
+                                    <div class="dual-ai-container">
+                                        <div class="row">
+                                            <!-- Neural Network Method -->
+                                            <div class="col-lg-6 mb-4">
+                                                <div class="ai-method-section neural-network">
+                                                    <div class="method-header">
+                                                        <i class="fas fa-brain"></i>
+                                                        <h4>Neural Network Method</h4>
+                                                    </div>
+                                                    <div class="predictions-list">
+                                                        {% if main_predictions %}
+                                                            {% for pred in main_predictions %}
+                                                            <div class="prediction-item">
+                                                                <div class="pred-info">
+                                                                    <h5>{{ pred.program_name }}</h5>
+                                                                    <p>{{ pred.school_name }}</p>
+                                                                </div>
+                                                                <div class="pred-confidence">
+                                                                    <div class="confidence-bar">
+                                                                        <div class="confidence-fill neural" style="width: {{ (pred.confidence * 100)|round }}%;"></div>
+                                                                    </div>
+                                                                    <span class="confidence-text">{{ (pred.confidence * 100)|round }}%</span>
+                                                                </div>
+                                                            </div>
+                                                            {% endfor %}
+                                                        {% else %}
+                                                            <div class="no-predictions">
+                                                                <i class="fas fa-exclamation-triangle"></i>
+                                                                <p>Neural network unavailable</p>
+                                                            </div>
+                                                        {% endif %}
+                                                    </div>
+                                                    <div class="method-stats">
+                                                        <span class="stat-item">
+                                                            <i class="fas fa-chart-line"></i>
+                                                            {{ main_predictions|length }} Predictions
+                                                        </span>
+                                                        {% if main_predictions %}
+                                                        <span class="stat-item">
+                                                            <i class="fas fa-percentage"></i>
+                                                            {{ ((main_predictions | map(attribute='confidence') | sum) / main_predictions|length * 100) | round }}% Average Confidence
+                                                        </span>
+                                                        {% endif %}
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <!-- Statistical Method -->
+                                            <div class="col-lg-6 mb-4">
+                                                <div class="ai-method-section statistical">
+                                                    <div class="method-header">
+                                                        <i class="fas fa-chart-bar"></i>
+                                                        <h4>Statistical Method</h4>
+                                                    </div>
+                                                    <div class="predictions-list">
+                                                        {% if backup_predictions %}
+                                                            {% for pred in backup_predictions %}
+                                                            <div class="prediction-item">
+                                                                <div class="pred-info">
+                                                                    <h5>{{ pred.program_name }}</h5>
+                                                                    <p>{{ pred.school_name }}</p>
+                                                                </div>
+                                                                <div class="pred-confidence">
+                                                                    <div class="confidence-bar">
+                                                                        <div class="confidence-fill statistical" style="width: {{ (pred.confidence * 100)|round }}%;"></div>
+                                                                    </div>
+                                                                    <span class="confidence-text">{{ (pred.confidence * 100)|round }}%</span>
+                                                                </div>
+                                                            </div>
+                                                            {% endfor %}
+                                                        {% else %}
+                                                            <div class="no-predictions">
+                                                                <i class="fas fa-exclamation-triangle"></i>
+                                                                <p>Statistical analysis unavailable</p>
+                                                            </div>
+                                                        {% endif %}
+                                                    </div>
+                                                    <div class="method-stats">
+                                                        <span class="stat-item">
+                                                            <i class="fas fa-chart-bar"></i>
+                                                            {{ backup_predictions|length }} Predictions
+                                                        </span>
+                                                        {% if backup_predictions %}
+                                                        <span class="stat-item">
+                                                            <i class="fas fa-percentage"></i>
+                                                            {{ ((backup_predictions | map(attribute='confidence') | sum) / backup_predictions|length * 100) | round }}% Average Confidence
+                                                        </span>
+                                                        {% endif %}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Consensus Recommendations -->
+                                        {% if consensus_recommendations %}
+                                        <div class="consensus-section mt-4">
+                                            <div class="consensus-header">
+                                                <i class="fas fa-handshake"></i>
+                                                <h4>Consensus Recommendations - Both methods agree</h4>
+                                            </div>
+                                            <div class="consensus-list">
+                                                {% for consensus in consensus_recommendations %}
+                                                <div class="consensus-item">
+                                                    <div class="consensus-info">
+                                                        <h5>{{ consensus.program_name }}</h5>
+                                                        <p>{{ consensus.school_name }}</p>
+                                                    </div>
+                                                    <div class="consensus-scores">
+                                                        <div class="score-comparison">
+                                                            <span class="score neural">Neural: {{ (consensus.main_confidence * 100)|round }}%</span>
+                                                            <span class="score statistical">Statistical: {{ (consensus.backup_confidence * 100)|round }}%</span>
+                                                        </div>
+                                                        <div class="avg-score">
+                                                            Average: {{ (consensus.avg_confidence * 100)|round }}%
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                {% endfor %}
+                                            </div>
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                            {% endif %}
+
+                            <!-- Action Buttons -->
+                            <div class="recommendations-actions text-center" data-aos="fade-up" data-aos-delay="300">
+                                {% if has_retakes %}
+                                <a href="{{ url_for('main.survey') }}" class="retake-survey-btn cosmic-enhanced">
+                                    <div class="btn-icon-wrapper">
+                                        <i class="fas fa-redo-alt"></i>
+                                    </div>
+                                    <div class="btn-content">
+                                        <span class="btn-text">Retake Survey</span>
+                                        <span class="btn-subtitle">{{ retakes_left }} retake{{ 's' if retakes_left != 1 else '' }} remaining</span>
+                                    </div>
+                                    <div class="btn-cosmic-glow"></div>
+                                    <div class="btn-particles"></div>
+                                </a>
+                                {% else %}
+                                <div class="retake-disabled-notice">
+                                    <div class="notice-icon">
+                                        <i class="fas fa-check-circle"></i>
+                                    </div>
+                                    <div class="notice-content">
+                                        <span class="notice-text">Survey Completed</span>
+                                        <span class="notice-subtitle">Maximum {{ max_submissions }} submissions reached</span>
+                                    </div>
+                                </div>
+                                {% endif %}
+                                <!-- 
+                                <a href="{{ url_for('main.universities') }}" class="cosmic-btn-enhanced primary">
+                                    <i class="fas fa-university"></i>
+                                    <span>Explore Universities</span>
+                                    <div class="btn-cosmic-glow"></div>
+                                </a>
+                                -->
+                            </div>
+                        </div>
+
+                    {% else %}
+                        <!-- User hasn't taken any surveys -->
+                        <div class="no-surveys-container text-center">
+                            <div class="cosmic-card">
+                                <div class="card-content">
+                                    <div class="empty-state-icon mb-4">
+                                        <div class="professional-emoji size-xxl cosmic-glow">
+                                            <i class="fas fa-poll"></i>
+                                        </div>
+                                    </div>
+                                    <h2 class="mb-3">Ready to Discover Your Perfect University?</h2>
+                                    <p class="lead mb-4">
+                                        Take our comprehensive survey to get personalized university and program recommendations based on your interests, goals, and preferences.
+                                    </p>
+                                    
+                                    <div class="survey-benefits mb-4">
+                                        <div class="benefit-grid">
+                                            <div class="benefit-item">
+                                                <i class="fas fa-brain"></i>
+                                                <h5>AI-Powered</h5>
+                                                <p>Advanced machine learning analyzes your responses</p>
+                                            </div>
+                                            <div class="benefit-item">
+                                                <i class="fas fa-target"></i>
+                                                <h5>Personalized</h5>
+                                                <p>Recommendations tailored specifically for you</p>
+                                            </div>
+                                            <div class="benefit-item">
+                                                <i class="fas fa-clock"></i>
+                                                <h5>Quick & Easy</h5>
+                                                <p>Takes only 5-10 minutes to complete</p>
+                                            </div>
+                                            <div class="benefit-item">
+                                                <i class="fas fa-university"></i>
+                                                <h5>Comprehensive</h5>
+                                                <p>Covers programs from top universities</p>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="cta-actions">
+                                        <a href="{{ url_for('main.survey') }}" class="cosmic-survey-btn">
+                                            <div class="btn-cosmic-bg"></div>
+                                            <div class="btn-content-wrapper">
+                                                <div class="btn-icon-cosmic">
+                                                    🚀
+                                                </div>
+                                                <div class="btn-text-content">
+                                                    <span class="btn-main-text">Take Survey Now</span>
+                                                    <span class="btn-sub-text">Discover Your Perfect University</span>
+                                                </div>
+                                                <div class="btn-arrow">
+                                                    <i class="fas fa-arrow-right" aria-hidden="true"></i>
+                                                    <span class="icon-fallback" style="display: none;">→</span>
+                                                </div>
+                                            </div>
+                                            <div class="btn-glow-effect"></div>
+                                            <div class="btn-particles-effect"></div>
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Floating particles -->
+    <div class="cosmic-particles-floating"></div>
+</div>
+
+<style>
+/* Recommendations Page Styles */
+.recommendations-container {
+    max-width: 1000px;
+    margin: 0 auto;
+}
+
+.cosmic-card {
+    background: rgba(30, 30, 70, 0.4);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(139, 92, 246, 0.2);
+    border-radius: 1.5rem;
+    padding: 2rem;
+    transition: all 0.4s ease;
+    overflow: hidden;
+    position: relative;
+}
+
+.cosmic-card:hover {
+    border-color: rgba(139, 92, 246, 0.4);
+    box-shadow: 0 20px 60px rgba(139, 92, 246, 0.2);
+}
+
+.card-header {
+    margin-bottom: 1.5rem;
+}
+
+.card-header h3 {
+    color: var(--star-white);
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+}
+
+.card-header p {
+    color: rgba(248, 250, 252, 0.7);
+    margin: 0;
+}
+
+.status-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.status-item i {
+    font-size: 2rem;
+    color: #10B981;
+}
+
+.status-details h5 {
+    color: var(--star-white);
+    font-weight: 600;
+    margin-bottom: 0.25rem;
+}
+
+.status-details p {
+    color: rgba(248, 250, 252, 0.8);
+    margin: 0;
+}
+
+.analysis-metric {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    background: rgba(139, 92, 246, 0.1);
+    border-radius: 1rem;
+    height: 100%;
+}
+
+.metric-icon {
+    font-size: 2rem;
+    color: #A855F7;
+}
+
+.metric-content h4 {
+    color: var(--star-white);
+    font-size: 1rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+}
+
+.score-display {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.score-number {
+    color: #10B981;
+    font-size: 1.5rem;
+    font-weight: 700;
+}
+
+.score-bar {
+    width: 100%;
+    height: 0.5rem;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 0.25rem;
+    overflow: hidden;
+}
+
+.score-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #10B981, #34D399);
+    border-radius: 0.25rem;
+    transition: width 1s ease;
+}
+
+.metric-value .number {
+    color: #A855F7;
+    font-size: 1.5rem;
+    font-weight: 700;
+    display: block;
+}
+
+.metric-value .label {
+    color: rgba(248, 250, 252, 0.7);
+    font-size: 0.85rem;
+}
+
+.best-match {
+    color: #10B981;
+    font-weight: 600;
+    display: block;
+}
+
+.confidence {
+    color: rgba(248, 250, 252, 0.7);
+    font-size: 0.85rem;
+}
+
+.recommendations-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.recommendation-item {
+    background: rgba(139, 92, 246, 0.05);
+    border: 1px solid rgba(139, 92, 246, 0.2);
+    border-radius: 1rem;
+    padding: 1.5rem;
+    transition: all 0.3s ease;
+}
+
+.recommendation-item:hover {
+    background: rgba(139, 92, 246, 0.1);
+    border-color: rgba(139, 92, 246, 0.3);
+    transform: translateY(-2px);
+}
+
+.rec-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.rec-rank {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.5rem;
+    height: 2.5rem;
+    background: linear-gradient(135deg, #8B5CF6, #A855F7);
+    border-radius: 50%;
+    color: white;
+    font-weight: 700;
+    font-size: 1.1rem;
+}
+
+.rec-info {
+    flex: 1;
+}
+
+.rec-info h4 {
+    color: var(--star-white);
+    font-size: 1.2rem;
+    font-weight: 600;
+    margin-bottom: 0.25rem;
+}
+
+.rec-info p {
+    color: rgba(248, 250, 252, 0.7);
+    margin: 0;
+}
+
+.rec-score {
+    text-align: center;
+}
+
+.rec-score .score {
+    color: #10B981;
+    font-size: 1.5rem;
+    font-weight: 700;
+    display: block;
+}
+
+.rec-score small {
+    color: rgba(248, 250, 252, 0.6);
+}
+
+.rec-tags {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+    flex-wrap: wrap;
+}
+
+.tag {
+    background: rgba(139, 92, 246, 0.2);
+    color: #C084FC;
+    padding: 0.25rem 0.75rem;
+    border-radius: 1rem;
+    font-size: 0.85rem;
+    font-weight: 500;
+}
+
+.rec-description {
+    color: rgba(248, 250, 252, 0.8);
+    line-height: 1.5;
+    margin: 0;
+}
+
+.no-surveys-container {
+    max-width: 700px;
+    margin: 0 auto;
+}
+
+.benefit-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.5rem;
+    margin: 2rem 0;
+}
+
+.benefit-item {
+    text-align: center;
+    padding: 1rem;
+}
+
+.benefit-item i {
+    font-size: 2rem;
+    color: #A855F7;
+    margin-bottom: 0.75rem;
+}
+
+.benefit-item h5 {
+    color: var(--star-white);
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+}
+
+.benefit-item p {
+    color: rgba(248, 250, 252, 0.7);
+    font-size: 0.9rem;
+    margin: 0;
+}
+
+.recommendations-actions {
+    margin-top: 2rem;
+}
+
+/* Enhanced Retake Survey Button */
+.retake-survey-btn {
+    display: inline-flex !important;
+    align-items: center;
+    gap: 1.5rem;
+    padding: 1.5rem 2.5rem !important;
+    background: linear-gradient(135deg, rgba(139, 92, 246, 0.2) 0%, rgba(6, 182, 212, 0.15) 100%) !important;
+    backdrop-filter: blur(20px) !important;
+    border: 2px solid rgba(139, 92, 246, 0.4) !important;
+    border-radius: 20px !important;
+    color: var(--star-white) !important;
+    text-decoration: none !important;
+    font-weight: 600 !important;
+    font-size: 1.1rem !important;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    position: relative !important;
+    overflow: hidden !important;
+    box-shadow: 
+        0 12px 40px rgba(139, 92, 246, 0.3),
+        inset 0 1px 0 rgba(255, 255, 255, 0.2) !important;
+    min-width: 280px;
+}
+
+.retake-survey-btn:hover {
+    transform: translateY(-4px) scale(1.02) !important;
+    background: linear-gradient(135deg, rgba(139, 92, 246, 0.3) 0%, rgba(6, 182, 212, 0.25) 100%) !important;
+    border-color: rgba(139, 92, 246, 0.7) !important;
+    box-shadow: 
+        0 20px 60px rgba(139, 92, 246, 0.4),
+        inset 0 1px 0 rgba(255, 255, 255, 0.3) !important;
+    color: var(--star-white) !important;
+    text-decoration: none !important;
+}
+
+.btn-icon-wrapper {
+    width: 50px;
+    height: 50px;
+    background: linear-gradient(135deg, #8B5CF6, #06B6D4);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    box-shadow: 0 8px 25px rgba(139, 92, 246, 0.4);
+    transition: all 0.3s ease;
+}
+
+.btn-icon-wrapper i {
+    font-size: 1.4rem;
+    color: white;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.retake-survey-btn:hover .btn-icon-wrapper {
+    transform: rotate(180deg) scale(1.1);
+    box-shadow: 0 12px 35px rgba(139, 92, 246, 0.6);
+}
+
+.btn-content {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    text-align: left;
+}
+
+.btn-text {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: var(--star-white);
+    margin-bottom: 0.25rem;
+    line-height: 1.2;
+}
+
+.btn-subtitle {
+    font-size: 0.9rem;
+    color: rgba(248, 250, 252, 0.7);
+    font-weight: 400;
+    line-height: 1;
+}
+
+.btn-cosmic-glow {
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: conic-gradient(from 0deg, transparent, rgba(139, 92, 246, 0.1), transparent);
+    animation: rotate 4s linear infinite;
+    z-index: -1;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.retake-survey-btn:hover .btn-cosmic-glow {
+    opacity: 1;
+}
+
+.btn-particles {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 1;
+    overflow: hidden;
+    border-radius: 20px;
+}
+
+.btn-particles::before,
+.btn-particles::after {
+    content: '';
+    position: absolute;
+    width: 6px;
+    height: 6px;
+    background: rgba(139, 92, 246, 0.6);
+    border-radius: 50%;
+    animation: particleFloat 3s linear infinite;
+    opacity: 0;
+}
+
+.btn-particles::before {
+    left: 20%;
+    animation-delay: 0s;
+}
+
+.btn-particles::after {
+    left: 80%;
+    animation-delay: 1.5s;
+}
+
+.retake-survey-btn:hover .btn-particles::before,
+.retake-survey-btn:hover .btn-particles::after {
+    opacity: 1;
+}
+
+@keyframes particleFloat {
+    0% {
+        transform: translateY(100%) scale(0);
+        opacity: 0;
+    }
+    10% {
+        opacity: 1;
+    }
+    90% {
+        opacity: 1;
+    }
+    100% {
+        transform: translateY(-20px) scale(1);
+        opacity: 0;
+    }
+}
+
+@keyframes rotate {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Mobile responsiveness for retake button */
+@media (max-width: 768px) {
+    .retake-survey-btn {
+        padding: 1.2rem 2rem !important;
+        gap: 1rem;
+        min-width: 260px;
+        font-size: 1rem !important;
+    }
+    
+    .btn-icon-wrapper {
+        width: 45px;
+        height: 45px;
+    }
+    
+    .btn-icon-wrapper i {
+        font-size: 1.2rem;
+    }
+    
+    .btn-text {
+        font-size: 1.1rem;
+    }
+    
+    .btn-subtitle {
+        font-size: 0.85rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .retake-survey-btn {
+        padding: 1rem 1.5rem !important;
+        min-width: 240px;
+        gap: 0.8rem;
+    }
+    
+    .btn-icon-wrapper {
+        width: 40px;
+        height: 40px;
+    }
+    
+    .btn-icon-wrapper i {
+        font-size: 1.1rem;
+    }
+}
+
+/* Retake Disabled Notice */
+.retake-disabled-notice {
+    display: inline-flex;
+    align-items: center;
+    gap: 1.5rem;
+    padding: 1.5rem 2.5rem;
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.15) 0%, rgba(34, 197, 94, 0.1) 100%);
+    backdrop-filter: blur(20px);
+    border: 2px solid rgba(16, 185, 129, 0.4);
+    border-radius: 20px;
+    color: var(--star-white);
+    font-weight: 600;
+    font-size: 1.1rem;
+    min-width: 280px;
+    box-shadow: 
+        0 12px 40px rgba(16, 185, 129, 0.2),
+        inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+.notice-icon {
+    width: 50px;
+    height: 50px;
+    background: linear-gradient(135deg, #10B981, #34D399);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    box-shadow: 0 8px 25px rgba(16, 185, 129, 0.4);
+}
+
+.notice-icon i {
+    font-size: 1.4rem;
+    color: white;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.notice-content {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    text-align: left;
+}
+
+.notice-text {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: var(--star-white);
+    margin-bottom: 0.25rem;
+    line-height: 1.2;
+}
+
+.notice-subtitle {
+    font-size: 0.9rem;
+    color: rgba(248, 250, 252, 0.7);
+    font-weight: 400;
+    line-height: 1;
+}
+
+/* Mobile responsiveness for disabled notice */
+@media (max-width: 768px) {
+    .retake-disabled-notice {
+        padding: 1.2rem 2rem;
+        gap: 1rem;
+        min-width: 260px;
+        font-size: 1rem;
+    }
+    
+    .notice-icon {
+        width: 45px;
+        height: 45px;
+    }
+    
+    .notice-icon i {
+        font-size: 1.2rem;
+    }
+    
+    .notice-text {
+        font-size: 1.1rem;
+    }
+    
+    .notice-subtitle {
+        font-size: 0.85rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .retake-disabled-notice {
+        padding: 1rem 1.5rem;
+        min-width: 240px;
+        gap: 0.8rem;
+    }
+    
+    .notice-icon {
+        width: 40px;
+        height: 40px;
+    }
+    
+    .notice-icon i {
+        font-size: 1.1rem;
+    }
+}
+
+/* Enhanced Cosmic Survey Button */
+.cosmic-survey-btn {
+    display: inline-block;
+    position: relative;
+    padding: 0;
+    margin: 2rem 0;
+    text-decoration: none;
+    border-radius: 24px;
+    overflow: hidden;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    cursor: pointer;
+    box-shadow: 
+        0 8px 32px rgba(139, 92, 246, 0.3),
+        0 4px 16px rgba(6, 182, 212, 0.2),
+        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    font-family: inherit;
+}
+
+.cosmic-survey-btn:hover {
+    transform: translateY(-4px) scale(1.02);
+    box-shadow: 
+        0 16px 48px rgba(139, 92, 246, 0.5),
+        0 8px 24px rgba(6, 182, 212, 0.3),
+        inset 0 1px 0 rgba(255, 255, 255, 0.2);
+    text-decoration: none;
+}
+
+.btn-cosmic-bg {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, 
+        #8B5CF6 0%, 
+        #A855F7 25%, 
+        #06B6D4 50%, 
+        #3B82F6 75%, 
+        #8B5CF6 100%);
+    background-size: 400% 400%;
+    animation: gradientShift 6s ease infinite;
+    z-index: 1;
+    border-radius: 24px;
+}
+
+.btn-content-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+    padding: 1.5rem 2.5rem;
+    background: rgba(0, 0, 0, 0.2);
+    backdrop-filter: blur(10px);
+    z-index: 2;
+    gap: 1.5rem;
+    border-radius: 24px;
+}
+
+.btn-icon-cosmic {
+    width: 50px;
+    height: 50px;
+    background: linear-gradient(135deg, #06B6D4, #3B82F6);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 16px rgba(6, 182, 212, 0.4);
+    z-index: 3;
+    font-size: 1.4rem;
+    color: white;
+}
+
+.cosmic-survey-btn:hover .btn-icon-cosmic {
+    transform: rotate(15deg) scale(1.1);
+    box-shadow: 0 8px 24px rgba(6, 182, 212, 0.6);
+}
+
+.btn-text-content {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    flex: 1;
+}
+
+.btn-main-text {
+    font-size: 1.3rem;
+    font-weight: 700;
+    color: white;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    line-height: 1.2;
+}
+
+.btn-sub-text {
+    font-size: 0.9rem;
+    color: rgba(255, 255, 255, 0.8);
+    font-weight: 400;
+    margin-top: 0.25rem;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+.btn-arrow {
+    width: 40px;
+    height: 40px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(10px);
+    z-index: 3;
+}
+
+.btn-arrow i {
+    font-size: 1.2rem;
+    color: white;
+    transition: all 0.3s ease;
+    font-family: "Font Awesome 6 Free", "Font Awesome 5 Free", fontawesome, sans-serif;
+    font-weight: 900;
+    display: block;
+    text-align: center;
+    line-height: 1;
+    position: relative;
+    z-index: 5;
+}
+
+/* Primary fallback - use arrow character if FontAwesome fails */
+.btn-arrow i:before {
+    content: "→";
+    font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+    font-style: normal;
+    font-weight: normal;
+    font-size: 1.2rem;
+    display: inline-block;
+}
+
+/* FontAwesome override - if FontAwesome loads, use the proper icon */
+.btn-arrow .fas.fa-arrow-right:before {
+    content: "\f061";
+    font-family: "Font Awesome 6 Free", "Font Awesome 5 Free", "FontAwesome";
+    font-weight: 900;
+    font-style: normal;
+}
+
+/* Additional fallback for older FontAwesome versions */
+.btn-arrow .fa-arrow-right:before {
+    content: "\f061";
+    font-family: FontAwesome, "Font Awesome 5 Free", "Font Awesome 6 Free";
+    font-weight: 900;
+}
+
+/* Force display if all else fails */
+.btn-arrow i:empty:before {
+    content: "→";
+    font-family: system-ui, -apple-system, sans-serif;
+}
+
+.cosmic-survey-btn:hover .btn-arrow {
+    background: rgba(255, 255, 255, 0.2);
+    transform: translateX(4px);
+}
+
+.cosmic-survey-btn:hover .btn-arrow i {
+    transform: translateX(2px);
+}
+
+.btn-glow-effect {
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: conic-gradient(
+        from 0deg,
+        transparent,
+        rgba(139, 92, 246, 0.4),
+        transparent,
+        rgba(6, 182, 212, 0.4),
+        transparent
+    );
+    animation: rotate 8s linear infinite;
+    z-index: 0;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    border-radius: 50%;
+}
+
+.cosmic-survey-btn:hover .btn-glow-effect {
+    opacity: 1;
+}
+
+.btn-particles-effect {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    pointer-events: none;
+    z-index: 3;
+    overflow: hidden;
+    border-radius: 24px;
+}
+
+.btn-particles-effect::before,
+.btn-particles-effect::after {
+    content: '';
+    position: absolute;
+    width: 4px;
+    height: 4px;
+    background: rgba(255, 255, 255, 0.6);
+    border-radius: 50%;
+    animation: floatParticles 4s linear infinite;
+    opacity: 0;
+}
+
+.btn-particles-effect::before {
+    left: 20%;
+    animation-delay: 0s;
+}
+
+.btn-particles-effect::after {
+    left: 80%;
+    animation-delay: 2s;
+}
+
+.cosmic-survey-btn:hover .btn-particles-effect::before,
+.cosmic-survey-btn:hover .btn-particles-effect::after {
+    opacity: 1;
+}
+
+@keyframes gradientShift {
+    0%, 100% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+}
+
+@keyframes rotate {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+@keyframes floatParticles {
+    0% {
+        transform: translateY(100%) scale(0);
+        opacity: 0;
+    }
+    10% {
+        opacity: 1;
+    }
+    90% {
+        opacity: 1;
+    }
+    100% {
+        transform: translateY(-20px) scale(1);
+        opacity: 0;
+    }
+}
+
+/* Mobile responsiveness for enhanced button */
+@media (max-width: 768px) {
+    .cosmic-survey-btn {
+        margin: 1.5rem 0;
+        border-radius: 20px;
+    }
+    
+    .btn-cosmic-bg {
+        border-radius: 20px;
+    }
+    
+    .btn-content-wrapper {
+        padding: 1.2rem 2rem;
+        gap: 1rem;
+        border-radius: 20px;
+    }
+    
+    .btn-particles-effect {
+        border-radius: 20px;
+    }
+    
+    .btn-icon-cosmic {
+        width: 45px;
+        height: 45px;
+    }
+    
+    .btn-icon-cosmic i {
+        font-size: 1.2rem;
+    }
+    
+    .btn-main-text {
+        font-size: 1.1rem;
+    }
+    
+    .btn-sub-text {
+        font-size: 0.85rem;
+    }
+    
+    .btn-arrow {
+        width: 35px;
+        height: 35px;
+    }
+    
+    .btn-arrow i {
+        font-size: 1rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .cosmic-survey-btn {
+        border-radius: 18px;
+    }
+    
+    .btn-cosmic-bg {
+        border-radius: 18px;
+    }
+    
+    .btn-content-wrapper {
+        padding: 1rem 1.5rem;
+        gap: 0.8rem;
+        border-radius: 18px;
+    }
+    
+    .btn-particles-effect {
+        border-radius: 18px;
+    }
+    
+    .btn-icon-cosmic {
+        width: 40px;
+        height: 40px;
+    }
+    
+    .btn-main-text {
+        font-size: 1rem;
+    }
+    
+    .btn-sub-text {
+        font-size: 0.8rem;
+    }
+    
+    .btn-arrow {
+        width: 32px;
+        height: 32px;
+    }
+    
+    .btn-arrow i {
+        font-size: 0.9rem;
+    }
+}
+
+/* Additional CSS to ensure icons are visible */
+.cosmic-survey-btn * {
+    font-family: inherit;
+}
+
+/* Force FontAwesome to load if available */
+@import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css');
+
+/* Ensure proper icon rendering */
+.btn-icon-cosmic i,
+.btn-arrow i {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    font-style: normal;
+    font-variant: normal;
+    text-rendering: auto;
+    speak: none;
+    /* Ensure icon content displays */
+    min-width: 1.2em;
+    min-height: 1.2em;
+    line-height: 1.2em;
+}
+
+/* Force visibility of pseudo-elements */
+.btn-icon-cosmic i:before,
+.btn-arrow i:before {
+    opacity: 1 !important;
+    visibility: visible !important;
+    display: inline-block !important;
+}
+
+/* Dual AI Analysis Styles */
+.dual-ai-container {
+    margin-top: 1rem;
+}
+
+.ai-method-section {
+    background: rgba(20, 20, 40, 0.6);
+    border-radius: 1rem;
+    padding: 1.5rem;
+    height: 100%;
+    border: 1px solid rgba(139, 92, 246, 0.2);
+    transition: all 0.3s ease;
+}
+
+.ai-method-section.neural-network {
+    border-left: 4px solid #3b82f6;
+}
+
+.ai-method-section.statistical {
+    border-left: 4px solid #10b981;
+}
+
+.ai-method-section:hover {
+    border-color: rgba(139, 92, 246, 0.4);
+    box-shadow: 0 10px 30px rgba(139, 92, 246, 0.1);
+}
+
+.method-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid rgba(139, 92, 246, 0.2);
+}
+
+.method-header i {
+    font-size: 1.5rem;
+    margin-right: 0.5rem;
+    color: var(--cosmic-blue);
+}
+
+.method-header h4 {
+    margin: 0;
+    color: white;
+    font-size: 1.1rem;
+}
+
+.predictions-list {
+    margin-bottom: 1rem;
+}
+
+.prediction-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem;
+    margin-bottom: 0.5rem;
+    background: rgba(139, 92, 246, 0.1);
+    border-radius: 0.5rem;
+    border: 1px solid rgba(139, 92, 246, 0.2);
+}
+
+.pred-info h5 {
+    margin: 0;
+    color: white;
+    font-size: 0.9rem;
+    font-weight: 600;
+}
+
+.pred-info p {
+    margin: 0;
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 0.8rem;
+}
+
+.pred-confidence {
+    text-align: right;
+    min-width: 80px;
+}
+
+.confidence-bar {
+    width: 60px;
+    height: 6px;
+    background: rgba(139, 92, 246, 0.2);
+    border-radius: 3px;
+    overflow: hidden;
+    margin-bottom: 0.25rem;
+}
+
+.confidence-fill.neural {
+    background: linear-gradient(90deg, #3b82f6, #60a5fa);
+    height: 100%;
+    transition: width 0.3s ease;
+}
+
+.confidence-fill.statistical {
+    background: linear-gradient(90deg, #10b981, #34d399);
+    height: 100%;
+    transition: width 0.3s ease;
+}
+
+.confidence-text {
+    font-size: 0.8rem;
+    color: white;
+    font-weight: 500;
+}
+
+.no-predictions {
+    text-align: center;
+    padding: 2rem;
+    color: rgba(255, 255, 255, 0.6);
+}
+
+.no-predictions i {
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+    color: #f59e0b;
+}
+
+.method-stats {
+    display: flex;
+    gap: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid rgba(139, 92, 246, 0.2);
+}
+
+.stat-item {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    font-size: 0.8rem;
+    color: rgba(255, 255, 255, 0.7);
+}
+
+.stat-item i {
+    color: var(--cosmic-blue);
+}
+
+.consensus-section {
+    background: rgba(255, 215, 0, 0.1);
+    border: 2px solid rgba(255, 215, 0, 0.3);
+    border-radius: 1rem;
+    padding: 1.5rem;
+}
+
+.consensus-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 1rem;
+    text-align: center;
+    justify-content: center;
+}
+
+.consensus-header i {
+    font-size: 1.5rem;
+    margin-right: 0.5rem;
+    color: #fbbf24;
+}
+
+.consensus-header h4 {
+    margin: 0;
+    color: #fbbf24;
+    font-size: 1.1rem;
+}
+
+.consensus-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem;
+    margin-bottom: 0.5rem;
+    background: rgba(255, 215, 0, 0.05);
+    border-radius: 0.5rem;
+    border: 1px solid rgba(255, 215, 0, 0.2);
+}
+
+.consensus-info h5 {
+    margin: 0;
+    color: white;
+    font-size: 1rem;
+    font-weight: 600;
+}
+
+.consensus-info p {
+    margin: 0;
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 0.9rem;
+}
+
+.consensus-scores {
+    text-align: right;
+}
+
+.score-comparison {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    margin-bottom: 0.5rem;
+}
+
+.score.neural {
+    color: #60a5fa;
+    font-size: 0.8rem;
+}
+
+.score.statistical {
+    color: #34d399;
+    font-size: 0.8rem;
+}
+
+.avg-score {
+    color: #fbbf24;
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+@media (max-width: 768px) {
+    .ai-method-section {
+        margin-bottom: 1rem;
+    }
+    
+    .prediction-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+    }
+    
+    .pred-confidence {
+        align-self: stretch;
+        text-align: left;
+    }
+    
+    .confidence-bar {
+        width: 100%;
+    }
+    
+    .consensus-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+    }
+    
+    .consensus-scores {
+        align-self: stretch;
+        text-align: left;
+    }
+    
+    .method-stats {
+        flex-wrap: wrap;
+    }
+}
+</style>
+
+<script>
+// JavaScript fallback to ensure icons are visible
+document.addEventListener('DOMContentLoaded', function() {
+    // Check if FontAwesome has loaded
+    setTimeout(function() {
+        const rocketIcon = document.querySelector('.btn-icon-cosmic i');
+        const rocketFallback = document.querySelector('.btn-icon-cosmic .icon-fallback');
+        const arrowIcon = document.querySelector('.btn-arrow i');
+        const arrowFallback = document.querySelector('.btn-arrow .icon-fallback');
+        
+        // Function to check if an icon is properly displayed
+        function isIconDisplayed(element) {
+            if (!element) return false;
+            const style = window.getComputedStyle(element, ':before');
+            return element.offsetWidth > 5 && element.offsetHeight > 5;
+        }
+        
+        // Check rocket icon
+        if (rocketIcon && !isIconDisplayed(rocketIcon)) {
+            if (rocketFallback) {
+                rocketIcon.style.display = 'none';
+                rocketFallback.style.display = 'inline-block';
+                rocketFallback.style.fontSize = '1.4rem';
+                rocketFallback.style.color = 'white';
+            }
+        }
+        
+        // Check arrow icon
+        if (arrowIcon && !isIconDisplayed(arrowIcon)) {
+            if (arrowFallback) {
+                arrowIcon.style.display = 'none';
+                arrowFallback.style.display = 'inline-block';
+                arrowFallback.style.fontSize = '1.2rem';
+                arrowFallback.style.color = 'white';
+            }
+        }
+    }, 1000); // Wait 1 second for FontAwesome to load
+});
+</script>
+{% endblock %} 
