@@ -31,6 +31,23 @@ def create_app(config_class=Config):
     bootstrap.init_app(app)
     csrf.init_app(app)
 
+    # Initialize database tables on first run
+    with app.app_context():
+        try:
+            # Test database connection
+            from sqlalchemy import text
+            db.session.execute(text('SELECT 1'))
+            app.logger.info("✅ Database connection successful")
+            
+            # Create all tables if they don't exist
+            db.create_all()
+            app.logger.info("✅ Database tables initialized")
+            
+        except Exception as e:
+            app.logger.error(f"❌ Database initialization failed: {e}")
+            # Continue without database (will use fallback SQLite)
+            pass
+
     
     from app.main import bp as main_bp
     app.register_blueprint(main_bp)

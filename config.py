@@ -15,11 +15,14 @@ class Config:
     DATABASE_URL = os.environ.get('DATABASE_URL')
     
     if DATABASE_URL:
-        # Production: Use PostgreSQL from Render
+        # Production: Use PostgreSQL from Render with psycopg3
         SQLALCHEMY_DATABASE_URI = DATABASE_URL
         # Fix for SQLAlchemy 1.4+ compatibility with Render's postgres:// URLs
         if SQLALCHEMY_DATABASE_URI.startswith("postgres://"):
             SQLALCHEMY_DATABASE_URI = SQLALCHEMY_DATABASE_URI.replace("postgres://", "postgresql://", 1)
+        # For psycopg3 compatibility, ensure the URL uses the correct format
+        if "postgresql://" in SQLALCHEMY_DATABASE_URI and "?sslmode=" not in SQLALCHEMY_DATABASE_URI:
+            SQLALCHEMY_DATABASE_URI += "?sslmode=require"
     else:
         # Development: Use SQLite
         SQLALCHEMY_DATABASE_URI = 'sqlite:///' + os.path.join(basedir, 'app.db')
