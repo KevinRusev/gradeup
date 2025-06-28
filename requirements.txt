@@ -10,4 +10,5 @@ email-validator==2.1.0.post1
 psycopg2-binary==2.9.9
 Werkzeug==3.0.1
 SQLAlchemy==1.4.53
-alembic==1.13.1 
+alembic==1.13.1
+xlsxwriter==3.1.9 
