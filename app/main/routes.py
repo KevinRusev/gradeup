@@ -43,13 +43,21 @@ except ImportError:
     
     np = MockNumpy()
 
-from app.ml.recommendation_engine import recommendation_engine
-from app.ml.prediction_system import AdvancedPredictionSystem
-from app.ml.demo_prediction_service import demo_prediction_service
-from app.ml.service import MLModelService
-from app.ml.training.training_pipeline import TrainingPipeline
-from app.ml.training.linear_models import LinearRegression, LogisticRegression
-from app.ml.training.base import TrainingConfig
+# ML imports temporarily disabled for deployment
+# from app.ml.recommendation_engine import recommendation_engine
+# from app.ml.prediction_system import AdvancedPredictionSystem
+# from app.ml.demo_prediction_service import demo_prediction_service
+# from app.ml.service import MLModelService
+# from app.ml.training.training_pipeline import TrainingPipeline
+# from app.ml.training.linear_models import LinearRegression, LogisticRegression
+# from app.ml.training.base import TrainingConfig
+
+# Create mock objects for ML functionality
+class MockRecommendationEngine:
+    def get_personalized_suggestions(self, user_id, limit=3):
+        return {'completion_suggestions': []}
+
+recommendation_engine = MockRecommendationEngine()
 import json
 
 logger = logging.getLogger(__name__)
