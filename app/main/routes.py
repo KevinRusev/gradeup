@@ -1697,3 +1697,148 @@ def _find_consensus_recommendations(main_predictions, backup_predictions):
     # Sort by average confidence
     consensus.sort(key=lambda x: x['avg_confidence'], reverse=True)
     return consensus[:3] 
+
+@bp.route('/setup-database')
+def setup_database():
+    """Setup database with sample data - one-time operation"""
+    try:
+        import json
+        from app.models import User, School, Program, Survey
+        from werkzeug.security import generate_password_hash
+        
+        results = {
+            "admin_created": False,
+            "schools_created": 0,
+            "programs_created": 0,
+            "survey_created": False,
+            "errors": []
+        }
+        
+        # Create admin user
+        try:
+            admin = User.query.filter_by(username='admin').first()
+            if admin is None:
+                admin = User(
+                    username='admin',
+                    email='admin@example.com',
+                    is_admin=True
+                )
+                admin.set_password('admin123')
+                db.session.add(admin)
+                db.session.commit()
+                results["admin_created"] = True
+        except Exception as e:
+            results["errors"].append(f"Admin creation error: {str(e)}")
+        
+        # Create sample schools if none exist
+        try:
+            if School.query.count() == 0:
+                schools_data = [
+                    {
+                        "name": "Sofia University St. Kliment Ohridski",
+                        "description": "The oldest higher education institution in Bulgaria",
+                        "location": "Sofia, Bulgaria",
+                        "website": "https://www.uni-sofia.bg/",
+                        "email": "info@uni-sofia.bg",
+                        "phone": "+359 2 9308 200",
+                        "admission_requirements": "High school diploma, entrance exam",
+                        "programs": [
+                            {"name": "Computer Science", "description": "Study of algorithms and programming", "duration": "4 years", "degree_type": "Bachelor"},
+                            {"name": "Artificial Intelligence", "description": "Study of machine learning and AI", "duration": "2 years", "degree_type": "Master"},
+                            {"name": "Economics", "description": "Study of economic systems", "duration": "4 years", "degree_type": "Bachelor"}
+                        ]
+                    },
+                    {
+                        "name": "Technical University of Sofia",
+                        "description": "Leading technical university in Bulgaria",
+                        "location": "Sofia, Bulgaria",
+                        "website": "https://tu-sofia.bg/",
+                        "email": "info@tu-sofia.bg",
+                        "phone": "+359 2 965 2111",
+                        "admission_requirements": "High school diploma, math/physics exam",
+                        "programs": [
+                            {"name": "Electrical Engineering", "description": "Study of electrical systems", "duration": "4 years", "degree_type": "Bachelor"},
+                            {"name": "Mechanical Engineering", "description": "Study of mechanical systems", "duration": "4 years", "degree_type": "Bachelor"},
+                            {"name": "Computer Systems", "description": "Study of computer hardware and software", "duration": "4 years", "degree_type": "Bachelor"}
+                        ]
+                    },
+                    {
+                        "name": "Medical University of Sofia",
+                        "description": "Premier medical education institution",
+                        "location": "Sofia, Bulgaria",
+                        "website": "https://mu-sofia.bg/",
+                        "email": "info@mu-sofia.bg",
+                        "phone": "+359 2 9172 501",
+                        "admission_requirements": "Biology and Chemistry exams",
+                        "programs": [
+                            {"name": "Medicine", "description": "Study of human health and disease", "duration": "6 years", "degree_type": "Master"},
+                            {"name": "Dental Medicine", "description": "Study of oral health", "duration": "5 years", "degree_type": "Master"},
+                            {"name": "Pharmacy", "description": "Study of pharmaceutical sciences", "duration": "5 years", "degree_type": "Master"}
+                        ]
+                    }
+                ]
+                
+                for school_data in schools_data:
+                    programs_data = school_data.pop('programs')
+                    school = School(**school_data)
+                    db.session.add(school)
+                    db.session.flush()
+                    results["schools_created"] += 1
+                    
+                    for program_data in programs_data:
+                        program = Program(school_id=school.id, **program_data)
+                        db.session.add(program)
+                        results["programs_created"] += 1
+                
+                db.session.commit()
+        except Exception as e:
+            results["errors"].append(f"Schools creation error: {str(e)}")
+        
+        # Create sample survey
+        try:
+            if Survey.query.count() == 0:
+                survey_questions = [
+                    {
+                        "id": 1,
+                        "text": "What subjects do you enjoy the most?",
+                        "type": "multiple_choice",
+                        "options": ["Mathematics", "Physics", "Chemistry", "Biology", "Computer Science", "Economics"]
+                    },
+                    {
+                        "id": 2,
+                        "text": "What type of career interests you?",
+                        "type": "multiple_choice",
+                        "options": ["Technology", "Science", "Medicine", "Business", "Engineering"]
+                    },
+                    {
+                        "id": 3,
+                        "text": "How important is university location?",
+                        "type": "rating",
+                        "min": 1,
+                        "max": 5
+                    }
+                ]
+                
+                survey = Survey(
+                    title="Educational Preferences Survey",
+                    description="Help us recommend suitable academic programs",
+                    questions=json.dumps(survey_questions),
+                    is_active=True
+                )
+                db.session.add(survey)
+                db.session.commit()
+                results["survey_created"] = True
+        except Exception as e:
+            results["errors"].append(f"Survey creation error: {str(e)}")
+        
+        return jsonify({
+            "status": "success",
+            "message": "Database setup completed",
+            "results": results
+        })
+        
+    except Exception as e:
+        return jsonify({
+            "status": "error",
+            "message": f"Database setup failed: {str(e)}"
+        }), 500 
