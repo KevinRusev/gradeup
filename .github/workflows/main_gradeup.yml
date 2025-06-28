@@ -2,7 +2,7 @@
 # More GitHub Actions for Azure: https://github.com/Azure/actions
 # More info on Python, GitHub Actions, and Azure App Service: https://aka.ms/python-webapps-actions
 
-name: Build and deploy Python app to Azure Web App - GradeUp
+name: Build and deploy Python app to Azure Web App - gradeup
 
 on:
   push:
@@ -48,9 +48,6 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     needs: build
-    environment:
-      name: 'Production'
-      url: ${{ steps.deploy-to-webapp.outputs.webapp-url }}
     permissions:
       id-token: write #This is required for requesting the JWT
       contents: read #This is required for actions/checkout
@@ -68,14 +65,14 @@ jobs:
       - name: Login to Azure
         uses: azure/login@v2
         with:
-          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_6FA45A5367DF4FB985C36A1E252930AF }}
-          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_2C7CD7D72B5F457BA33CC020D68C1217 }}
-          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_279165B7E479454BA095968E3C316112 }}
+          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_1E8AB587EF0F4F1CB06563F364F8472D }}
+          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_26A07A6B6DA04C89881E276DC15D4F99 }}
+          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_F4771B90AACD4CD6A2C0F380AF96EE23 }}
 
       - name: 'Deploy to Azure Web App'
         uses: azure/webapps-deploy@v3
         id: deploy-to-webapp
         with:
-          app-name: 'GradeUp'
+          app-name: 'gradeup'
           slot-name: 'Production'
           
