@@ -36,8 +36,11 @@ def create_app(config_class=Config):
         try:
             # Test database connection
             from sqlalchemy import text
-            db.session.execute(text('SELECT 1'))
-            app.logger.info("✅ Database connection successful")
+            result = db.session.execute(text('SELECT 1'))
+            # For SQLAlchemy 2.0 compatibility
+            test_value = result.scalar()
+            if test_value == 1:
+                app.logger.info("✅ Database connection successful")
             
             # Create all tables if they don't exist
             db.create_all()
