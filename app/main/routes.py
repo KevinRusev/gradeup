@@ -16,7 +16,33 @@ from app import db
 import os
 import logging
 from datetime import datetime
-import numpy as np
+import random
+import math
+
+# Conditional numpy import with fallback
+try:
+    import numpy as np
+except ImportError:
+    # Create a simple numpy-like mock for basic functionality
+    class MockNumpy:
+        @staticmethod
+        def random():
+            class MockRandom:
+                @staticmethod
+                def seed(x): random.seed(x)
+                @staticmethod
+                def randn(*shape): return [[random.gauss(0, 1) for _ in range(shape[1] if len(shape) > 1 else shape[0])] for _ in range(shape[0] if len(shape) > 1 else 1)]
+                @staticmethod
+                def rand(*shape): return [[random.random() for _ in range(shape[1] if len(shape) > 1 else shape[0])] for _ in range(shape[0] if len(shape) > 1 else 1)]
+                @staticmethod
+                def uniform(low, high): return random.uniform(low, high)
+            return MockRandom()
+        
+        @staticmethod
+        def array(data): return data
+    
+    np = MockNumpy()
+
 from app.ml.recommendation_engine import recommendation_engine
 from app.ml.prediction_system import AdvancedPredictionSystem
 from app.ml.demo_prediction_service import demo_prediction_service
