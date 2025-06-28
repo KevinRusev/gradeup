@@ -76,6 +76,47 @@ def simple_status():
         "timestamp": datetime.now().isoformat()
     })
 
+@bp.route('/db-info')
+def database_info():
+    """Show database connection information"""
+    try:
+        from sqlalchemy import text
+        import os
+        
+        # Get database URL info
+        db_url = os.environ.get('DATABASE_URL', 'Not set')
+        db_type = "Unknown"
+        
+        if 'postgresql' in db_url.lower() or 'postgres' in db_url.lower():
+            db_type = "PostgreSQL"
+        elif 'sqlite' in db_url.lower():
+            db_type = "SQLite"
+        elif db_url == 'Not set':
+            db_type = "SQLite (fallback)"
+            
+        # Test database connection
+        result = db.session.execute(text('SELECT 1'))
+        connection_test = "✅ Connected" if result.scalar() == 1 else "❌ Failed"
+        
+        # Count some tables
+        user_count = User.query.count()
+        school_count = School.query.count()
+        
+        return jsonify({
+            "database_type": db_type,
+            "database_url_set": db_url != 'Not set',
+            "connection_status": connection_test,
+            "user_count": user_count,
+            "school_count": school_count,
+            "environment": "Production (Render)" if db_url != 'Not set' else "Development"
+        })
+        
+    except Exception as e:
+        return jsonify({
+            "error": str(e),
+            "database_type": "Error checking database"
+        }), 500
+
 @bp.route('/health')
 def health_check():
     """
