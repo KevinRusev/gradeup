@@ -110,8 +110,8 @@ A web application that helps students find the perfect educational institution b
 
 1. **Clone the repository:**
    ```bash
-   git clone https://github.com/your-username/school-recommendation-system.git
-   cd school-recommendation-system
+   git clone https://github.com/KevinRusev/gradeup.git
+   cd gradeup
    ```
 
 2. **Create a virtual environment (Python 3.12 is recommended!):**
@@ -153,19 +153,19 @@ A web application that helps students find the perfect educational institution b
 
 You can view the ERD for this project here:
 
->👉 [View ER Diagram For GradeUp HERE](https://lucid.app/lucidchart/61f65033-3af4-4cf8-bc17-acb81d5eca5f/edit?invitationId=inv_82560b78-52e7-4ab8-ae9b-d66805a27391)
+>👉 [View ER Diagram For GradeUp HERE](https://lucid.app/lucidchart/61f65033-3af4-4cf8-bc17-acb81d5eca5f/view)
 ---
 ## 🧩 Class Diagram
 
 You can view the Class Diagram for this project here:
 
->👉 [View Class Diagram For GradeUp HERE](https://lucid.app/lucidchart/1c0cb330-9383-4fa2-b729-de0712e22a35/edit?invitationId=inv_92692c0c-2064-46d6-8558-c64fcabbd25f)
+>👉 [View Class Diagram For GradeUp HERE](https://lucid.app/lucidchart/1c0cb330-9383-4fa2-b729-de0712e22a35/view)
 ---
 ## 🧩 Use Case Diagram
 
 You can view the Use Case Diagram for this project here:
 
->👉 [View Use Case Diagram For GradeUp HERE](https://lucid.app/lucidchart/8118d3f6-516f-424c-afa6-288fe6a2db89/edit?invitationId=inv_7fbc60f6-2588-4ccd-960f-ecb69aadf4cd)
+>👉 [View Use Case Diagram For GradeUp HERE](https://lucid.app/lucidchart/8118d3f6-516f-424c-afa6-288fe6a2db89/view)
 ---
 
 ## 💻 Technology Stack
